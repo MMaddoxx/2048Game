@@ -13,6 +13,8 @@
 int setConsole(); //ตั้งกรอบหน้าจอ
 int setMode();
 void initnumber();
+void printmini2048();
+int check(char moving);
 void drawframe();
 void movenum_up();
 void movenum_down();
@@ -54,17 +56,9 @@ int main()
     setMode();
     drawframe();
     initnumber();
-    gotoxy(0, 0);
-    for (int i = 0; i < 4; i++)
-    {
-        for (int j = 0; j < 4; j++)
-        {
-            printf("%d ", numberonscreen[i][j]);
-        }
-        printf("\n");
-    }
+    printmini2048();
     fill_number_to_screen();
-    /*while (playing)
+    while (playing)
     {
         if (kbhit())
         {
@@ -87,7 +81,7 @@ int main()
             }
         }
         fflush(stdin);
-    }*/
+    }
     getch();
     return 0;
 }
@@ -212,6 +206,193 @@ void fill_number_to_screen()
 }
 void movenum_up()
 {
+    int x, y;
+    bool loop = false;
+    do
+    {
+        for (y = 1; y < 4; y++)
+        {
+            for (x = 0; x < 4; x++)
+            {
+                if (numberonscreen[y][x] != 0 && numberonscreen[y - 1][x] == 0)
+                {
+                    numberonscreen[y - 1][x] = numberonscreen[y][x];
+                    numberonscreen[y][x] = 0;
+                    printmini2048();
+                    fill_number_to_screen();
+                    Sleep(250);
+                }
+            }
+        }
+        if (check('u') == 0)
+        {
+            loop = true;
+        }
+        else
+        {
+            loop = false;
+        }
+    } while (loop);
+}
+void movenum_down()
+{
+    int x, y;
+    bool loop = false;
+    do
+    {
+        for (y = 2; y >= 0; y--)
+        {
+            for (x = 0; x < 4; x++)
+            {
+                if (numberonscreen[y][x] != 0 && numberonscreen[y + 1][x] == 0)
+                {
+                    numberonscreen[y + 1][x] = numberonscreen[y][x];
+                    numberonscreen[y][x] = 0;
+                    printmini2048();
+                    fill_number_to_screen();
+                    Sleep(250);
+                }
+            }
+        }
+        if (check('d') == 0)
+        {
+            loop = true;
+        }
+        else
+        {
+            loop = false;
+        }
+    } while (loop);
+}
+void movenum_left()
+{
+    int x, y;
+    bool loop = false;
+    do
+    {
+        for (x = 1; x < 4; x++)
+        {
+            for (y = 0; y < 4; y++)
+            {
+                if (numberonscreen[y][x] != 0 && numberonscreen[y][x - 1] == 0)
+                {
+                    numberonscreen[y][x - 1] = numberonscreen[y][x];
+                    numberonscreen[y][x] = 0;
+                    printmini2048();
+                    fill_number_to_screen();
+                    Sleep(250);
+                }
+            }
+        }
+        if (check('l') == 0)
+        {
+            loop = true;
+        }
+        else
+        {
+            loop = false;
+        }
+    } while (loop);
+}
+void movenum_right()
+{
+    int x, y;
+    bool loop = false;
+    do
+    {
+        for (x = 2; x >= 0; x--)
+        {
+            for (y = 0; y < 4; y++)
+            {
+                if (numberonscreen[y][x] != 0 && numberonscreen[y][x + 1] == 0)
+                {
+                    numberonscreen[y][x + 1] = numberonscreen[y][x];
+                    numberonscreen[y][x] = 0;
+                    printmini2048();
+                    fill_number_to_screen();
+                    Sleep(250);
+                }
+            }
+        }
+        if (check('r') == 0)
+        {
+            loop = true;
+        }
+        else
+        {
+            loop = false;
+        }
+    } while (loop);
+}
+void printmini2048()
+{
+    gotoxy(0, 0);
+    setcolor(7, 0);
+    for (int i = 0; i < 4; i++)
+    {
+        for (int j = 0; j < 4; j++)
+        {
+            printf("%d ", numberonscreen[i][j]);
+        }
+        printf("\n");
+    }
+}
+int check(char moving)
+{
+    int x, y;
+    if (moving == 'u')
+    {
+        for (y = 1; y < 4; y++)
+        {
+            for (x = 0; x < 4; x++)
+            {
+                if (numberonscreen[y][x] != 0 && numberonscreen[y - 1][x] == 0)
+                {
+                    return 0;
+                }
+            }
+        }
+    }
+    else if (moving == 'd')
+    {
+        for (y = 2; y >= 0; y--)
+        {
+            for (x = 0; x < 4; x++)
+            {
+                if (numberonscreen[y][x] != 0 && numberonscreen[y + 1][x] == 0)
+                {
+                    return 0;
+                }
+            }
+        }
+    }
+    else if (moving == 'l')
+    {
+        for (x = 1; x < 4; x++)
+        {
+            for (y = 0; y < 4; y++)
+            {
+                if (numberonscreen[y][x] != 0 && numberonscreen[y][x - 1] == 0)
+                {
+                    return 0;
+                }
+            }
+        }
+    }
+    else if (moving == 'r')
+    {
+        for (x = 2; x >= 0; x--)
+        {
+            for (y = 0; y < 4; y++)
+            {
+                if (numberonscreen[y][x] != 0 && numberonscreen[y][x + 1] == 0)
+                {
+                    return 0;
+                }
+            }
+        }
+    }
+    return 1;
 }
 void gotoxy(SHORT x, SHORT y)
 {
