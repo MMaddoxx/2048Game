@@ -25,25 +25,19 @@ void fill_number_to_screen();
 void setcursor(bool visible); //เปิดปิดcursor
 void gotoxy(SHORT x, SHORT y);
 void setcolor(int fg, int bg);
-char cursor(SHORT x, SHORT y);
 //////////////////////GLOBAL VARIABLE/////////////////////////////////
 unsigned int score = 0;
 int numberposition_x[4] = {9, 21, 33, 45};
 int numberposition_y[4] = {9, 14, 19, 24};
-int numberonscreen[4][4] = {{4, 4, 4, 4},
+int numberonscreen[4][4] = {{0, 0, 0, 0},
                             {0, 0, 0, 0},
                             {0, 0, 0, 0},
                             {0, 0, 0, 0}}; //mini 2048  [y][x]
-bool playing = true;
-bool moving = false;
-struct number
-{
-    int position_x;
-    int position_y;
-    unsigned int value;
-    int position;
-};
-struct number number[100];
+int flag[4][4] = {{0, 0, 0, 0},
+                   {0, 0, 0, 0},
+                   {0, 0, 0, 0},
+                   {0, 0, 0, 0}};//สร้างarry เพิ่มบอกposition ห้ามบวกทับ
+bool playing = true;              
 HANDLE wHnd;
 HANDLE rHnd;
 SMALL_RECT windowSize = {0, 0, screen_x - 1, screen_y - 1};
@@ -326,7 +320,7 @@ void movenum_left()
                     numberonscreen[y][x] = 0;
                     printmini2048();
                     Sleep(100);
-                    newnum = true;   
+                    newnum = true;
                 }
                 else if (numberonscreen[y][x] == numberonscreen[y][x - 1] && numberonscreen[y][x] != 0)
                 {
@@ -494,19 +488,4 @@ void setcolor(int fg, int bg)
 {
     HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
     SetConsoleTextAttribute(hConsole, bg * 16 + fg);
-}
-char cursor(SHORT x, SHORT y)
-{
-    HANDLE hStd = GetStdHandle(STD_OUTPUT_HANDLE);
-    char buf[2];
-    COORD c = {x, y};
-    DWORD num_read;
-    if (!ReadConsoleOutputCharacter(hStd, (LPTSTR)buf, 1, c, (LPDWORD)&num_read))
-    {
-        return '\0';
-    }
-    else
-    {
-        return buf[0];
-    }
 }
