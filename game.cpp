@@ -13,7 +13,6 @@
 int setConsole(); //ตั้งกรอบหน้าจอ
 int setMode();
 void initnumber();
-void printmini2048();
 int check(char moving);
 void drawframe();
 void movenum_up();
@@ -29,15 +28,15 @@ void setcolor(int fg, int bg);
 unsigned int score = 0;
 int numberposition_x[4] = {9, 21, 33, 45};
 int numberposition_y[4] = {9, 14, 19, 24};
-int numberonscreen[4][4] = {{0, 0, 0, 0},
-                            {0, 0, 0, 0},
-                            {0, 0, 0, 0},
+int numberonscreen[4][4] = {{0, 0, 2, 0},
+                            {0, 0, 2, 0},
+                            {0, 0, 4, 0},
                             {0, 0, 0, 0}}; //mini 2048  [y][x]
 int flag[4][4] = {{0, 0, 0, 0},
-                   {0, 0, 0, 0},
-                   {0, 0, 0, 0},
-                   {0, 0, 0, 0}};//สร้างarry เพิ่มบอกposition ห้ามบวกทับ
-bool playing = true;              
+                  {0, 0, 0, 0},
+                  {0, 0, 0, 0},
+                  {0, 0, 0, 0}}; //สร้างarry เพิ่มบอกposition ห้ามบวกทับ
+bool playing = true;
 HANDLE wHnd;
 HANDLE rHnd;
 SMALL_RECT windowSize = {0, 0, screen_x - 1, screen_y - 1};
@@ -51,7 +50,6 @@ int main()
     setMode();
     drawframe();
     initnumber();
-    printmini2048();
     fill_number_to_screen();
     while (playing)
     {
@@ -208,6 +206,24 @@ void fill_number_to_screen()
                 gotoxy(numberposition_x[x] - 3, numberposition_y[y] + 1);
                 printf("       ");
             }
+            else if (numberonscreen[y][x] < 1000)
+            {
+                gotoxy(numberposition_x[x] - 3, numberposition_y[y] - 1);
+                printf("       ");
+                gotoxy(numberposition_x[x] - 3, numberposition_y[y]);
+                printf("  %d  ", numberonscreen[y][x]);
+                gotoxy(numberposition_x[x] - 3, numberposition_y[y] + 1);
+                printf("       ");
+            }
+            else if (numberonscreen[y][x] < 2300)
+            {
+                gotoxy(numberposition_x[x] - 3, numberposition_y[y] - 1);
+                printf("       ");
+                gotoxy(numberposition_x[x] - 3, numberposition_y[y]);
+                printf("  %d ", numberonscreen[y][x]);
+                gotoxy(numberposition_x[x] - 3, numberposition_y[y] + 1);
+                printf("       ");
+            }
         }
     }
 }
@@ -226,17 +242,18 @@ void movenum_up()
                 {
                     numberonscreen[y - 1][x] = numberonscreen[y][x];
                     numberonscreen[y][x] = 0;
-                    printmini2048();
+
                     Sleep(100);
                     newnum = true;
                 }
-                else if (numberonscreen[y][x] == numberonscreen[y - 1][x] && numberonscreen[y][x] != 0)
+                else if (numberonscreen[y][x] == numberonscreen[y - 1][x] && numberonscreen[y][x] != 0 && flag[y - 1][x] == 0 && flag[y][x] == 0)
                 {
                     numberonscreen[y - 1][x] *= 2;
                     numberonscreen[y][x] = 0;
-                    printmini2048();
+
                     Sleep(100);
                     newnum = true;
+                    flag[y - 1][x] = 1;
                 }
             }
             fill_number_to_screen();
@@ -253,8 +270,15 @@ void movenum_up()
     if (newnum)
     {
         newnumaftermove();
-        printmini2048();
+
         fill_number_to_screen();
+    }
+    for (x = 0; x < 4; x++)
+    {
+        for (y = 0; y < 4; y++)
+        {
+            flag[y][x] = 0;
+        }
     }
 }
 void movenum_down()
@@ -272,17 +296,17 @@ void movenum_down()
                 {
                     numberonscreen[y + 1][x] = numberonscreen[y][x];
                     numberonscreen[y][x] = 0;
-                    printmini2048();
                     Sleep(100);
                     newnum = true;
                 }
-                else if (numberonscreen[y][x] == numberonscreen[y + 1][x] && numberonscreen[y][x] != 0)
+                else if (numberonscreen[y][x] == numberonscreen[y + 1][x] && numberonscreen[y][x] != 0 && flag[y + 1][x] == 0 && flag[y][x] == 0)
                 {
                     numberonscreen[y + 1][x] *= 2;
                     numberonscreen[y][x] = 0;
-                    printmini2048();
+
                     Sleep(100);
                     newnum = true;
+                    flag[y + 1][x] = 1;
                 }
             }
             fill_number_to_screen();
@@ -299,8 +323,15 @@ void movenum_down()
     if (newnum)
     {
         newnumaftermove();
-        printmini2048();
+
         fill_number_to_screen();
+    }
+    for (x = 0; x < 4; x++)
+    {
+        for (y = 0; y < 4; y++)
+        {
+            flag[y][x] = 0;
+        }
     }
 }
 void movenum_left()
@@ -318,17 +349,17 @@ void movenum_left()
                 {
                     numberonscreen[y][x - 1] = numberonscreen[y][x];
                     numberonscreen[y][x] = 0;
-                    printmini2048();
+
                     Sleep(100);
                     newnum = true;
                 }
-                else if (numberonscreen[y][x] == numberonscreen[y][x - 1] && numberonscreen[y][x] != 0)
+                else if (numberonscreen[y][x] == numberonscreen[y][x - 1] && numberonscreen[y][x] != 0 && flag[y][x - 1] == 0 && flag[y][x] == 0)
                 {
                     numberonscreen[y][x - 1] *= 2;
                     numberonscreen[y][x] = 0;
-                    printmini2048();
-                    Sleep(100);
                     newnum = true;
+                    flag[y][x - 1] = 1;
+                    Sleep(100);
                 }
             }
             fill_number_to_screen();
@@ -345,8 +376,15 @@ void movenum_left()
     if (newnum)
     {
         newnumaftermove();
-        printmini2048();
+
         fill_number_to_screen();
+    }
+    for (x = 0; x < 4; x++)
+    {
+        for (y = 0; y < 4; y++)
+        {
+            flag[y][x] = 0;
+        }
     }
 }
 void movenum_right()
@@ -364,17 +402,16 @@ void movenum_right()
                 {
                     numberonscreen[y][x + 1] = numberonscreen[y][x];
                     numberonscreen[y][x] = 0;
-                    printmini2048();
                     Sleep(100);
                     newnum = true;
                 }
-                else if ((numberonscreen[y][x] == numberonscreen[y][x + 1]) && numberonscreen[y][x] != 0)
+                else if ((numberonscreen[y][x] == numberonscreen[y][x + 1]) && numberonscreen[y][x] != 0 && flag[y][x + 1] == 0 && flag[y][x] == 0)
                 {
                     numberonscreen[y][x + 1] *= 2;
                     numberonscreen[y][x] = 0;
-                    printmini2048();
                     Sleep(100);
                     newnum = true;
+                    flag[y][x + 1] = 1;
                 }
             }
             fill_number_to_screen();
@@ -391,9 +428,16 @@ void movenum_right()
     if (newnum)
     {
         newnumaftermove();
-        printmini2048();
+
         fill_number_to_screen();
         newnum = false;
+    }
+    for (x = 0; x < 4; x++)
+    {
+        for (y = 0; y < 4; y++)
+        {
+            flag[y][x] = 0;
+        }
     }
 }
 void newnumaftermove()
@@ -409,19 +453,6 @@ void newnumaftermove()
     }
     numberonscreen[y][x] = (rand() % 2) * 2 + 2;
 }
-void printmini2048()
-{
-    gotoxy(0, 0);
-    setcolor(7, 0);
-    for (int i = 0; i < 4; i++)
-    {
-        for (int j = 0; j < 4; j++)
-        {
-            printf("%d ", numberonscreen[i][j]);
-        }
-        printf("\n");
-    }
-}
 int check(char moving)
 {
     int x, y;
@@ -431,7 +462,7 @@ int check(char moving)
         {
             for (x = 0; x < 4; x++)
             {
-                if ((numberonscreen[y][x] != 0 && numberonscreen[y - 1][x] == 0) || (numberonscreen[y][x] == numberonscreen[y - 1][x] && numberonscreen[y][x] != 0))
+                if ((numberonscreen[y][x] != 0 && numberonscreen[y - 1][x] == 0) || (numberonscreen[y][x] == numberonscreen[y - 1][x] && numberonscreen[y][x] != 0 && flag[y][x] == 0))
                 {
                     return 0;
                 }
@@ -444,7 +475,7 @@ int check(char moving)
         {
             for (x = 0; x < 4; x++)
             {
-                if ((numberonscreen[y][x] != 0 && numberonscreen[y + 1][x] == 0 || (numberonscreen[y][x] == numberonscreen[y + 1][x] && numberonscreen[y][x] != 0)))
+                if ((numberonscreen[y][x] != 0 && numberonscreen[y + 1][x] == 0 || (numberonscreen[y][x] == numberonscreen[y + 1][x] && numberonscreen[y][x] != 0 && flag[y][x] == 0)))
                 {
                     return 0;
                 }
@@ -457,7 +488,7 @@ int check(char moving)
         {
             for (y = 0; y < 4; y++)
             {
-                if ((numberonscreen[y][x] != 0 && numberonscreen[y][x - 1] == 0) || (numberonscreen[y][x] == numberonscreen[y][x - 1] && numberonscreen[y][x] != 0))
+                if ((numberonscreen[y][x] != 0 && numberonscreen[y][x - 1] == 0) || (numberonscreen[y][x] == numberonscreen[y][x - 1] && numberonscreen[y][x] != 0 && flag[y][x] == 0))
                 {
                     return 0;
                 }
@@ -470,7 +501,7 @@ int check(char moving)
         {
             for (y = 0; y < 4; y++)
             {
-                if ((numberonscreen[y][x] != 0 && numberonscreen[y][x + 1] == 0 || (numberonscreen[y][x] == numberonscreen[y][x + 1] && numberonscreen[y][x] != 0)))
+                if ((numberonscreen[y][x] != 0 && numberonscreen[y][x + 1] == 0 || (numberonscreen[y][x] == numberonscreen[y][x + 1] && numberonscreen[y][x] != 0 && flag[y][x] == 0)))
                 {
                     return 0;
                 }
