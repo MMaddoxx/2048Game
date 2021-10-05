@@ -30,7 +30,7 @@ char cursor(SHORT x, SHORT y);
 unsigned int score = 0;
 int numberposition_x[4] = {9, 21, 33, 45};
 int numberposition_y[4] = {9, 14, 19, 24};
-int numberonscreen[4][4] = {{0, 0, 0, 0},
+int numberonscreen[4][4] = {{4, 4, 4, 4},
                             {0, 0, 0, 0},
                             {0, 0, 0, 0},
                             {0, 0, 0, 0}}; //mini 2048  [y][x]
@@ -242,6 +242,7 @@ void movenum_up()
                     numberonscreen[y][x] = 0;
                     printmini2048();
                     Sleep(100);
+                    newnum = true;
                 }
             }
             fill_number_to_screen();
@@ -287,6 +288,7 @@ void movenum_down()
                     numberonscreen[y][x] = 0;
                     printmini2048();
                     Sleep(100);
+                    newnum = true;
                 }
             }
             fill_number_to_screen();
@@ -324,7 +326,7 @@ void movenum_left()
                     numberonscreen[y][x] = 0;
                     printmini2048();
                     Sleep(100);
-                    newnum = true;
+                    newnum = true;   
                 }
                 else if (numberonscreen[y][x] == numberonscreen[y][x - 1] && numberonscreen[y][x] != 0)
                 {
@@ -332,6 +334,7 @@ void movenum_left()
                     numberonscreen[y][x] = 0;
                     printmini2048();
                     Sleep(100);
+                    newnum = true;
                 }
             }
             fill_number_to_screen();
@@ -377,6 +380,7 @@ void movenum_right()
                     numberonscreen[y][x] = 0;
                     printmini2048();
                     Sleep(100);
+                    newnum = true;
                 }
             }
             fill_number_to_screen();
