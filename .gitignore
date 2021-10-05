@@ -2,3 +2,5 @@
 .vscode/launch.json
 .vscode/tasks.json
 game.exe
+present.exe
+present.cpp
