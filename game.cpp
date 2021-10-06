@@ -12,20 +12,23 @@
 ///////////////////PROTORYPE FUNCTION ////////////////////////////////
 int setConsole(); //ตั้งกรอบหน้าจอ
 int setMode();
-int check(char moving);
-void initnumber();
-void drawframe();
-void movenum_up();
-void movenum_down();
-void movenum_left();
-void movenum_right();
-void newnumaftermove();
-void fill_number_to_screen();
+int check(char moving);       //เอาไว้ตรวจสอบว่าขยับได้อยู่ไหม
+void menu();                  //สร้างหน้าเมนู
+void initnumber();            //สุ่มตำแหน่งบล็อกเลขเริ่มต้น 2 ตัว
+void drawframe();             //วาดเฟรม
+void movenum_up();            //ขยับบล็อกขึ้น
+void movenum_down();          //ขยับบล็อกลง
+void movenum_left();          //ขยับบล็อกซ้าย
+void movenum_right();         //ขยับบล็อกขวา
+void newnumaftermove();       //สุ่มตัวเลขใหม่หลังจากขยับเสร็จ
+void fill_number_to_screen(); //นำตัวเลขหลังการขยับเอาเอามาขึ้นจอ
+void show_score();            //แสดงคะแนนที่ผู้เล่นทำได้
 void setcursor(bool visible); //เปิดปิดcursor
 void gotoxy(SHORT x, SHORT y);
 void setcolor(int fg, int bg);
 //////////////////////GLOBAL VARIABLE/////////////////////////////////
 unsigned int score = 0;
+FILE *fp;
 int numberposition_x[4] = {9, 21, 33, 45};
 int numberposition_y[4] = {9, 14, 19, 24};
 int numberonscreen[4][4] = {{0, 0, 0, 0},
@@ -36,7 +39,15 @@ int flag[4][4] = {{0, 0, 0, 0},
                   {0, 0, 0, 0},
                   {0, 0, 0, 0},
                   {0, 0, 0, 0}}; //สร้างarry เพิ่มบอกposition ห้ามบวกทับ
-bool playing = true;
+struct game
+{
+    char playername[20];
+    unsigned int playerscore;
+};
+struct game player;
+
+bool playing = false;
+bool in_menu = true;
 HANDLE wHnd;
 HANDLE rHnd;
 SMALL_RECT windowSize = {0, 0, screen_x - 1, screen_y - 1};
@@ -44,16 +55,48 @@ DWORD fdwMode;
 //////////////////////////////MAIN////////////////////////////////////
 int main()
 {
+   
     char ch;
     setcursor(false);
     setConsole();
     setMode();
+    while (in_menu)
+    {
+        menu();
+        if (kbhit())
+        {
+            ch = getch();
+            if (ch == '1')
+            {
+                system("cls");
+                gotoxy(0,0);
+                setcolor(7,0);
+                printf("Enter your name : ");
+                scanf("%s",player.playername);
+                fp=fopen("2048Scoreboard.txt","a");
+                in_menu = false;
+                playing = true;
+            }
+            else if(ch=='2')
+            {
+                fp=fopen("2048Scoreboard.txt","r");
+                system("cls");
+            }
+            else if (ch == esc)
+            {
+                in_menu = false;
+            }
+            fflush(stdin);
+        }
+    }
+    system("cls");
     drawframe();
     initnumber();
     fill_number_to_screen();
+    show_score();
     while (playing)
     {
-        if (kbhit())
+        if (kbhit()) //ถ้ามาการกดคตีย์บอร์ดระหว่างเล่น
         {
             ch = getch();
             if (ch == keyup)
@@ -76,9 +119,26 @@ int main()
             {
                 playing = false;
             }
+            else if (ch == 'r')
+            {
+                for (int y = 0; y < 4; y++)
+                {
+                    for (int x = 0; x < 4; x++)
+                    {
+                        numberonscreen[y][x] = 0;
+                    }
+                }
+                initnumber();
+                fill_number_to_screen();
+                score = 0;
+                show_score();
+            }
         }
         fflush(stdin);
     }
+    player.playerscore=score;
+    fwrite(&player,sizeof(struct game),1,fp);
+    fclose(fp);
     return 0;
 }
 //////////////////////////FUNCTION////////////////////////////////////
@@ -102,6 +162,73 @@ int setMode()
     SetConsoleMode(rHnd, fdwMode);
     return 0;
 }
+void menu()
+{
+    //////////////2048///////////////////////////
+    gotoxy(10, 2);
+    setcolor(7, 0);
+    printf("___________________________________");
+    gotoxy(9, 3);
+    printf("|");
+    setcolor(0, 6);
+    printf("                                   ");
+    setcolor(7, 0);
+    printf("|");
+    gotoxy(9, 4);
+    printf("|");
+    setcolor(7, 6);
+    printf("               2048                ");
+    setcolor(7, 0);
+    printf("|");
+    gotoxy(9, 5);
+    printf("|");
+    setcolor(7, 6);
+    printf("___________________________________");
+    setcolor(7, 0);
+    printf("|");
+    //////////////////Press 1///////////////////
+    gotoxy(11, 9);
+    printf(" ______________________________");
+    gotoxy(11, 10);
+    printf("|");
+    setcolor(0, 5);
+    printf("                              ");
+    setcolor(7, 0);
+    printf("|");
+    gotoxy(10, 11);
+    printf("<");
+    setcolor(7, 5);
+    printf("     Press 1 to start game      ");
+    setcolor(7, 0);
+    printf(">");
+    gotoxy(11, 12);
+    printf("|");
+    setcolor(7, 5);
+    printf("______________________________");
+    setcolor(7, 0);
+    printf("|");
+    //////////////////Press 2/////////////////
+    gotoxy(11, 15);
+    printf(" ______________________________");
+    gotoxy(11, 16);
+    printf("|");
+    setcolor(0, 3);
+    printf("                              ");
+    setcolor(7, 0);
+    printf("|");
+    gotoxy(10, 17);
+    printf("<");
+    setcolor(7, 3);
+    printf("   Press 2 to see scoreboard    ");
+    setcolor(7, 0);
+    printf(">");
+    gotoxy(11, 18);
+    printf("|");
+    setcolor(7, 3);
+    printf("______________________________");
+    setcolor(7, 0);
+    printf("|");
+}
 void drawframe()
 {
     int i, j;
@@ -115,6 +242,19 @@ void drawframe()
         }
         printf("   |___________|___________|___________|___________|\n");
     }
+    gotoxy(0, 1);
+    setcolor(2, 0);
+    printf("    __________________\n");
+    printf("   |                  |\n");
+    printf("   |                  |\n");
+    printf("   |__________________|\n");
+    setcolor(5, 0);
+    gotoxy(29, 2);
+    printf("Use %c %c <- -> to navigate", 24, 25);
+    gotoxy(29, 3);
+    printf("Press R to researt");
+    gotoxy(29, 4);
+    printf("Press ESC to quit");
 }
 void initnumber()
 {
@@ -125,12 +265,12 @@ void initnumber()
 
         x = rand() % 4;
         y = rand() % 4;
-        while (numberonscreen[y][x] != 0)
+        while (numberonscreen[y][x] != 0) //ถ้าได้ตำแหน่งที่ไม่ใช่ 0 ให้สุ่มใหม่จนกว่าจะได้
         {
             x = rand() % 4;
             y = rand() % 4;
         }
-        numberonscreen[y][x] = (rand() % 2) * 2 + 2;
+        numberonscreen[y][x] = (rand() % 2) * 2 + 2; //สุ่มว่าจะเป็น 2 หรือ 4
     }
 }
 void fill_number_to_screen()
@@ -140,7 +280,7 @@ void fill_number_to_screen()
     {
         for (x = 0; x < 4; x++)
         {
-            if (numberonscreen[y][x] == 0)
+            if (numberonscreen[y][x] == 0) //เซทสี
             {
                 setcolor(0, 0);
             }
@@ -238,29 +378,32 @@ void movenum_up()
         {
             for (x = 0; x < 4; x++)
             {
-                if (numberonscreen[y][x] != 0 && numberonscreen[y - 1][x] == 0)
+                if (numberonscreen[y][x] != 0 && numberonscreen[y - 1][x] == 0) //ถ้าหากข้างหน้าเป็นช่องว่าง (0) ก็จะขยับขึ้นไปได้เลย
                 {
                     numberonscreen[y - 1][x] = numberonscreen[y][x];
                     numberonscreen[y][x] = 0;
-
-                    Sleep(100);
+                    Sleep(75);
                     newnum = true;
                 }
                 else if (numberonscreen[y][x] == numberonscreen[y - 1][x] && numberonscreen[y][x] != 0 && flag[y - 1][x] == 0 && flag[y][x] == 0)
-                {
+                { //ถ้าหากว่าเป็นตัวที่เหมือนกันและไม่ติดflag(ไม่เคยบวกมาก่อน)
                     numberonscreen[y - 1][x] *= 2;
                     numberonscreen[y][x] = 0;
+                    score = score + numberonscreen[y - 1][x];
                     newnum = true;
                     flag[y - 1][x] = 1;
-                    Sleep(100);
-                    if (numberonscreen[y - 1][x] == 2048)
+                    Sleep(75);
+
+                    if (numberonscreen[y - 1][x] == 2048) //ถ้าวกแล้วได้2048
                     {
+                        score = score + numberonscreen[y - 1][x];
                         fill_number_to_screen();
                         playing = false;
                     }
                 }
             }
             fill_number_to_screen();
+            show_score();
         }
         if (check('u') == 0)
         {
@@ -281,7 +424,7 @@ void movenum_up()
     {
         for (y = 0; y < 4; y++)
         {
-            flag[y][x] = 0;
+            flag[y][x] = 0; //พอขยับและบวกเลขหมดแล้วก็รีเซทflag
         }
     }
 }
@@ -296,28 +439,31 @@ void movenum_down()
         {
             for (x = 0; x < 4; x++)
             {
-                if (numberonscreen[y][x] != 0 && numberonscreen[y + 1][x] == 0)
+                if (numberonscreen[y][x] != 0 && numberonscreen[y + 1][x] == 0) //ถ้าหากข้างหน้าเป็นช่องว่าง (0) ก็จะขยับลงไปได้เลย
                 {
                     numberonscreen[y + 1][x] = numberonscreen[y][x];
                     numberonscreen[y][x] = 0;
-                    Sleep(100);
+                    Sleep(75);
                     newnum = true;
                 }
                 else if (numberonscreen[y][x] == numberonscreen[y + 1][x] && numberonscreen[y][x] != 0 && flag[y + 1][x] == 0 && flag[y][x] == 0)
-                {
+                { //ถ้าหากว่าเป็นตัวที่เหมือนกันและไม่ติดflag(ไม่เคยบวกมาก่อน)
                     numberonscreen[y + 1][x] *= 2;
                     numberonscreen[y][x] = 0;
-                    Sleep(100);
+                    score = score + numberonscreen[y + 1][x];
+                    Sleep(75);
                     newnum = true;
                     flag[y + 1][x] = 1;
-                    if (numberonscreen[y + 1][x] == 2048)
+                    if (numberonscreen[y + 1][x] == 2048) //ถ้าวกแล้วได้2048
                     {
+                        score = score + numberonscreen[y - 1][x];
                         fill_number_to_screen();
                         playing = false;
                     }
                 }
             }
             fill_number_to_screen();
+            show_score();
         }
         if (check('d') == 0)
         {
@@ -334,7 +480,7 @@ void movenum_down()
 
         fill_number_to_screen();
     }
-    for (x = 0; x < 4; x++)
+    for (x = 0; x < 4; x++) //พอขยับและบวกเลขหมดแล้วก็รีเซทflag
     {
         for (y = 0; y < 4; y++)
         {
@@ -353,33 +499,32 @@ void movenum_left()
         {
             for (y = 0; y < 4; y++)
             {
-                if (numberonscreen[y][x] != 0 && numberonscreen[y][x - 1] == 0)
+                if (numberonscreen[y][x] != 0 && numberonscreen[y][x - 1] == 0) //ถ้าหากข้างหน้าเป็นช่องว่าง (0) ก็จะขยับซ้ายไปได้เลย
                 {
                     numberonscreen[y][x - 1] = numberonscreen[y][x];
                     numberonscreen[y][x] = 0;
 
-                    Sleep(100);
+                    Sleep(75);
                     newnum = true;
                 }
                 else if (numberonscreen[y][x] == numberonscreen[y][x - 1] && numberonscreen[y][x] != 0 && flag[y][x - 1] == 0 && flag[y][x] == 0)
-                {
+                { //ถ้าหากว่าเป็นตัวที่เหมือนกันและไม่ติดflag(ไม่เคยบวกมาก่อน)
                     numberonscreen[y][x - 1] *= 2;
                     numberonscreen[y][x] = 0;
                     newnum = true;
                     flag[y][x - 1] = 1;
-                    Sleep(100);
+                    score = score + numberonscreen[y][x - 1];
+                    Sleep(75);
                     if (numberonscreen[y][x - 1] == 2048)
                     {
+                        score = score + numberonscreen[y][x - 1]; //ถ้าวกแล้วได้2048
                         fill_number_to_screen();
                         playing = false;
                     }
                 }
             }
             fill_number_to_screen();
-            if (numberonscreen[y][x] == 2048)
-            {
-                playing = false;
-            }
+            show_score();
         }
         if (check('l') == 0)
         {
@@ -400,7 +545,7 @@ void movenum_left()
     {
         for (y = 0; y < 4; y++)
         {
-            flag[y][x] = 0;
+            flag[y][x] = 0; //พอขยับและบวกเลขหมดแล้วก็รีเซทflag
         }
     }
 }
@@ -415,32 +560,31 @@ void movenum_right()
         {
             for (y = 0; y < 4; y++)
             {
-                if (numberonscreen[y][x] != 0 && numberonscreen[y][x + 1] == 0)
+                if (numberonscreen[y][x] != 0 && numberonscreen[y][x + 1] == 0) //ถ้าหากข้างหน้าเป็นช่องว่าง (0) ก็จะขยับขวาไปได้เลย
                 {
                     numberonscreen[y][x + 1] = numberonscreen[y][x];
                     numberonscreen[y][x] = 0;
-                    Sleep(100);
+                    Sleep(75);
                     newnum = true;
                 }
                 else if ((numberonscreen[y][x] == numberonscreen[y][x + 1]) && numberonscreen[y][x] != 0 && flag[y][x + 1] == 0 && flag[y][x] == 0)
-                {
+                { //ถ้าหากว่าเป็นตัวที่เหมือนกันและไม่ติดflag(ไม่เคยบวกมาก่อน)
                     numberonscreen[y][x + 1] *= 2;
                     numberonscreen[y][x] = 0;
                     newnum = true;
                     flag[y][x + 1] = 1;
-                    Sleep(100);
-                    if (numberonscreen[y][x + 1] == 2048)
+                    score = score + numberonscreen[y][x + 1];
+                    Sleep(75);
+                    if (numberonscreen[y][x + 1] == 2048) //ถ้าวกแล้วได้2048
                     {
+                        score = score + numberonscreen[y][x + 1];
                         fill_number_to_screen();
                         playing = false;
                     }
                 }
             }
             fill_number_to_screen();
-            if (numberonscreen[y][x] == 2048)
-            {
-                playing = false;
-            }
+            show_score();
         }
         if (check('r') == 0)
         {
@@ -454,7 +598,6 @@ void movenum_right()
     if (newnum)
     {
         newnumaftermove();
-
         fill_number_to_screen();
         newnum = false;
     }
@@ -462,7 +605,7 @@ void movenum_right()
     {
         for (y = 0; y < 4; y++)
         {
-            flag[y][x] = 0;
+            flag[y][x] = 0; //พอขยับและบวกเลขหมดแล้วก็รีเซทflag
         }
     }
 }
@@ -478,6 +621,12 @@ void newnumaftermove()
         y = rand() % 4;
     }
     numberonscreen[y][x] = (rand() % 2) * 2 + 2;
+}
+void show_score()
+{
+    gotoxy(4, 3);
+    setcolor(0, 7);
+    printf("Score : %d", score);
 }
 int check(char moving)
 {
