@@ -23,12 +23,12 @@ void movenum_right();         //ขยับบล็อกขวา
 void newnumaftermove();       //สุ่มตัวเลขใหม่หลังจากขยับเสร็จ
 void fill_number_to_screen(); //นำตัวเลขหลังการขยับเอาเอามาขึ้นจอ
 void show_score();            //แสดงคะแนนที่ผู้เล่นทำได้
+void arange_score();          //เรียงคะแนน
 void setcursor(bool visible); //เปิดปิดcursor
 void gotoxy(SHORT x, SHORT y);
 void setcolor(int fg, int bg);
 //////////////////////GLOBAL VARIABLE/////////////////////////////////
 unsigned int score = 0;
-FILE *fp;
 int numberposition_x[4] = {9, 21, 33, 45};
 int numberposition_y[4] = {9, 14, 19, 24};
 int numberonscreen[4][4] = {{0, 0, 0, 0},
@@ -39,15 +39,14 @@ int flag[4][4] = {{0, 0, 0, 0},
                   {0, 0, 0, 0},
                   {0, 0, 0, 0},
                   {0, 0, 0, 0}}; //สร้างarry เพิ่มบอกposition ห้ามบวกทับ
-struct game
+bool playing = false;
+bool in_menu = true;
+struct score
 {
     char playername[20];
     unsigned int playerscore;
-};
-struct game player;
-
-bool playing = false;
-bool in_menu = true;
+} player[6];
+FILE *fp;
 HANDLE wHnd;
 HANDLE rHnd;
 SMALL_RECT windowSize = {0, 0, screen_x - 1, screen_y - 1};
@@ -55,7 +54,6 @@ DWORD fdwMode;
 //////////////////////////////MAIN////////////////////////////////////
 int main()
 {
-   
     char ch;
     setcursor(false);
     setConsole();
@@ -69,17 +67,15 @@ int main()
             if (ch == '1')
             {
                 system("cls");
-                gotoxy(0,0);
-                setcolor(7,0);
+                gotoxy(0, 0);
+                setcolor(7, 0);
                 printf("Enter your name : ");
-                scanf("%s",player.playername);
-                fp=fopen("2048Scoreboard.txt","a");
+                scanf("%s", player[5].playername);
                 in_menu = false;
                 playing = true;
             }
-            else if(ch=='2')
+            else if (ch == '2')
             {
-                fp=fopen("2048Scoreboard.txt","r");
                 system("cls");
             }
             else if (ch == esc)
@@ -136,9 +132,7 @@ int main()
         }
         fflush(stdin);
     }
-    player.playerscore=score;
-    fwrite(&player,sizeof(struct game),1,fp);
-    fclose(fp);
+    player[5].playerscore = score;
     return 0;
 }
 //////////////////////////FUNCTION////////////////////////////////////
@@ -393,7 +387,6 @@ void movenum_up()
                     newnum = true;
                     flag[y - 1][x] = 1;
                     Sleep(75);
-
                     if (numberonscreen[y - 1][x] == 2048) //ถ้าวกแล้วได้2048
                     {
                         score = score + numberonscreen[y - 1][x];
@@ -417,7 +410,6 @@ void movenum_up()
     if (newnum)
     {
         newnumaftermove();
-
         fill_number_to_screen();
     }
     for (x = 0; x < 4; x++)
@@ -503,7 +495,6 @@ void movenum_left()
                 {
                     numberonscreen[y][x - 1] = numberonscreen[y][x];
                     numberonscreen[y][x] = 0;
-
                     Sleep(75);
                     newnum = true;
                 }
