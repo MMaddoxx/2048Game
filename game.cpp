@@ -25,10 +25,15 @@ void fill_number_to_screen(); //นำตัวเลขหลังการข
 void show_score();            //แสดงคะแนนที่ผู้เล่นทำได้
 void arange_score();          //เรียงคะแนน
 void setcursor(bool visible); //เปิดปิดcursor
+void readfile();              //อ้่านไฟล์ScoreBoard
+void writefile();             //เขียนคะแนน
+void enteryourname();         //เอาไวั้รับชื่อผู้เล่น
+void scoreboard();
 void gotoxy(SHORT x, SHORT y);
 void setcolor(int fg, int bg);
 //////////////////////GLOBAL VARIABLE/////////////////////////////////
 unsigned int score = 0;
+unsigned int readcount = 0;
 int numberposition_x[4] = {9, 21, 33, 45};
 int numberposition_y[4] = {9, 14, 19, 24};
 int numberonscreen[4][4] = {{0, 0, 0, 0},
@@ -41,6 +46,8 @@ int flag[4][4] = {{0, 0, 0, 0},
                   {0, 0, 0, 0}}; //สร้างarry เพิ่มบอกposition ห้ามบวกทับ
 bool playing = false;
 bool in_menu = true;
+bool in_scoreboard = false;
+bool runing = true;
 struct score
 {
     char playername[20];
@@ -58,81 +65,121 @@ int main()
     setcursor(false);
     setConsole();
     setMode();
-    while (in_menu)
+    readfile();
+    while (runing)
     {
-        menu();
-        if (kbhit())
+        while (in_menu)
         {
-            ch = getch();
-            if (ch == '1')
+            menu();
+            if (kbhit())
             {
-                system("cls");
-                gotoxy(0, 0);
-                setcolor(7, 0);
-                printf("Enter your name : ");
-                scanf("%s", player[5].playername);
-                in_menu = false;
-                playing = true;
+                ch = getch();
+                if (ch == '1')
+                {
+                    system("cls");
+                    enteryourname();
+                    in_menu = false;
+                    playing = true;
+                }
+                else if (ch == '2')
+                {
+                    system("cls");
+                    in_scoreboard = true;
+                    while (in_scoreboard)
+                    {
+                        scoreboard();
+                        if (kbhit())
+                        {
+                            ch = getch();
+                            if (ch == esc)
+                            {
+                                in_scoreboard = false;
+                            }
+                        }
+                    }
+                    system("cls");
+                }
+                else if (ch == esc)
+                {
+                    in_menu = false;
+                    runing = false;
+                }
+                fflush(stdin);
             }
-            else if (ch == '2')
+        }
+        system("cls");
+        drawframe();
+        initnumber();
+        fill_number_to_screen();
+        show_score();
+        while (playing)
+        {
+            if (kbhit()) //ถ้ามาการกดคตีย์บอร์ดระหว่างเล่น
             {
-                system("cls");
-            }
-            else if (ch == esc)
-            {
-                in_menu = false;
+                ch = getch();
+                if (ch == keyup)
+                {
+                    movenum_up();
+                }
+                else if (ch == keydown)
+                {
+                    movenum_down();
+                }
+                else if (ch == keyleft)
+                {
+                    movenum_left();
+                }
+                else if (ch == keyright)
+                {
+                    movenum_right();
+                }
+                else if (ch == esc)
+                {
+                    setcolor(7, 0);
+                    system("cls");
+                    playing = false;
+                    in_menu = true;
+                    for (int y = 0; y < 4; y++)
+                    {
+                        for (int x = 0; x < 4; x++)
+                        {
+                            numberonscreen[y][x] = 0;
+                        }
+                    }
+                    if (score != 0)
+                    {
+                        player[readcount].playerscore = score;
+                        writefile();
+                        score = 0;
+                    }
+                }
+                else if (ch == 'r')
+                {
+                    for (int y = 0; y < 4; y++)
+                    {
+                        for (int x = 0; x < 4; x++)
+                        {
+                            numberonscreen[y][x] = 0;
+                        }
+                    }
+                    if (score != 0)
+                    {
+                        player[readcount].playerscore = score;
+                        writefile();
+                        score = 0;
+                    }
+                    setcolor(7, 0);
+                    system("cls");
+                    drawframe();
+                    initnumber();
+                    fill_number_to_screen();
+                    score = 0;
+                    show_score();
+                }
             }
             fflush(stdin);
         }
     }
-    system("cls");
-    drawframe();
-    initnumber();
-    fill_number_to_screen();
-    show_score();
-    while (playing)
-    {
-        if (kbhit()) //ถ้ามาการกดคตีย์บอร์ดระหว่างเล่น
-        {
-            ch = getch();
-            if (ch == keyup)
-            {
-                movenum_up();
-            }
-            else if (ch == keydown)
-            {
-                movenum_down();
-            }
-            else if (ch == keyleft)
-            {
-                movenum_left();
-            }
-            else if (ch == keyright)
-            {
-                movenum_right();
-            }
-            else if (ch == esc)
-            {
-                playing = false;
-            }
-            else if (ch == 'r')
-            {
-                for (int y = 0; y < 4; y++)
-                {
-                    for (int x = 0; x < 4; x++)
-                    {
-                        numberonscreen[y][x] = 0;
-                    }
-                }
-                initnumber();
-                fill_number_to_screen();
-                score = 0;
-                show_score();
-            }
-        }
-        fflush(stdin);
-    }
-    player[5].playerscore = score;
     return 0;
 }
 //////////////////////////FUNCTION////////////////////////////////////
@@ -227,6 +274,7 @@ void drawframe()
 {
     int i, j;
     gotoxy(0, 6);
+    setcolor(7, 0);
     printf("    _______________________________________________\n");
     for (j = 1; j <= 4; j++)
     {
@@ -246,7 +294,7 @@ void drawframe()
     gotoxy(29, 2);
     printf("Use %c %c <- -> to navigate", 24, 25);
     gotoxy(29, 3);
-    printf("Press R to researt");
+    printf("Press R to restart");
     gotoxy(29, 4);
     printf("Press ESC to quit");
 }
@@ -675,6 +723,110 @@ int check(char moving)
         }
     }
     return 1;
+}
+void readfile()
+{
+    fp = fopen("2048_ScoreBoard.txt", "r");
+    do
+    {
+        fscanf(fp, "%d %s", &player[readcount].playerscore, player[readcount].playername);
+        readcount++;
+        printf("%s\n", player[readcount].playername);
+    } while (player[readcount - 1].playername[0] != 'x' && readcount <= 4);
+}
+void writefile()
+{
+    int i, j, a;
+    char name[20];
+    fp = fopen("2048_ScoreBoard.txt", "w");
+    for (i = 0; i <= readcount; i++)
+    {
+        for (j = i + 1; j <= readcount; j++)
+        {
+            if (player[i].playerscore < player[j].playerscore)
+            {
+                a = player[j].playerscore;
+                player[j].playerscore = player[i].playerscore;
+                player[i].playerscore = a;
+                strcpy(name, player[j].playername);
+                strcpy(player[j].playername, player[i].playername);
+                strcpy(player[i].playername, name);
+            }
+        }
+    }
+    for (i = 0; i < readcount; i++)
+    {
+        fprintf(fp, "%d %s\n", player[i].playerscore, player[i].playername);
+    }
+    if (readcount < 5)
+    {
+        for (i = 0; i <= 5 - readcount; i++)
+        {
+            fprintf(fp, "0 x\n");
+        }
+    }
+    fclose(fp);
+}
+void scoreboard()
+{
+    //SCORE BOARD
+    gotoxy(10, 2);
+    setcolor(7, 0);
+    printf("___________________________________");
+    gotoxy(9, 3);
+    printf("|");
+    setcolor(7, 3);
+    printf("                                   ");
+    setcolor(7, 0);
+    printf("|");
+    gotoxy(9, 4);
+    printf("|");
+    setcolor(7, 3);
+    printf("            SCORE BOARD            ");
+    setcolor(7, 0);
+    printf("|");
+    gotoxy(9, 5);
+    printf("|");
+    setcolor(7, 3);
+    printf("___________________________________");
+    setcolor(7, 0);
+    printf("|");
+    //Number
+    int i;
+    gotoxy(11, 8);
+    printf("Name-Score");
+    for (i = 0; i < 5; i++)
+    {
+        gotoxy(8, 10 + 3 * i);
+        setcolor(rand() % 9 + 1, 0);
+        printf("%d. %s %d\n\n", i + 1, player[i].playername, player[i].playerscore);
+    }
+    gotoxy(11, 25);
+    setcolor(7, 0);
+    printf("Press ESC to exit to menu");
+}
+void enteryourname()
+{
+    srand(time(NULL));
+    setcolor(rand() % 9 + 1, 0);
+    gotoxy(18, 5);
+    printf("__________________");
+    setcolor(rand() % 9 + 1, 0);
+    gotoxy(17, 6);
+    printf("|                  |");
+    setcolor(rand() % 9 + 1, 0);
+    gotoxy(17, 7);
+    printf("| Enter Your Name  |");
+    setcolor(rand() % 9 + 1, 0);
+    gotoxy(17, 8);
+    printf("|__________________|");
+    gotoxy(17, 10);
+    setcolor(rand() % 9 + 1, 0);
+    printf("-->");
+    setcursor(1);
+    setcolor(rand() % 9 + 1, 0);
+    scanf("%s", player[readcount].playername);
+    setcursor(0);
 }
 void gotoxy(SHORT x, SHORT y)
 {
