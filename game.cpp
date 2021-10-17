@@ -12,6 +12,7 @@
 ///////////////////PROTORYPE FUNCTION ////////////////////////////////
 int setConsole(); //ตั้งกรอบหน้าจอ
 int setMode();
+int islose();                 //ตรวจสอบการแก้
 int check(char moving);       //เอาไว้ตรวจสอบว่าขยับได้อยู่ไหม
 void menu();                  //สร้างหน้าเมนู
 void initnumber();            //สุ่มตำแหน่งบล็อกเลขเริ่มต้น 2 ตัว
@@ -175,6 +176,31 @@ int main()
                     fill_number_to_screen();
                     score = 0;
                     show_score();
+                }
+                if (islose() == 1)
+                {
+                    Sleep(2000);
+                    for (int y = 0; y < 4; y++)
+                    {
+                        for (int x = 0; x < 4; x++)
+                        {
+                            numberonscreen[y][x] = 0;
+                        }
+                    }
+                    fill_number_to_screen();
+                    setcolor(7, 4);
+                    for (int i = 13; i <= 15; i++)
+                    {
+                        gotoxy(16, i);
+                        printf("                       ");
+                    }
+                    gotoxy(16, 16);
+                    printf("       Game Over       ");
+                    for (int i = 17; i <= 19; i++)
+                    {
+                        gotoxy(16, i);
+                        printf("                       ");
+                    }
                 }
             }
             fflush(stdin);
@@ -811,13 +837,10 @@ void enteryourname()
     setcolor(rand() % 9 + 1, 0);
     gotoxy(18, 5);
     printf("__________________");
-    setcolor(rand() % 9 + 1, 0);
     gotoxy(17, 6);
     printf("|                  |");
-    setcolor(rand() % 9 + 1, 0);
     gotoxy(17, 7);
     printf("| Enter Your Name  |");
-    setcolor(rand() % 9 + 1, 0);
     gotoxy(17, 8);
     printf("|__________________|");
     gotoxy(17, 10);
@@ -827,6 +850,40 @@ void enteryourname()
     setcolor(rand() % 9 + 1, 0);
     scanf("%s", player[readcount].playername);
     setcursor(0);
+}
+int islose()
+{
+    int x = 0, y = 0, count = 0;
+    for (y = 0; y <= 3; y++)
+    {
+        for (x = 0; x < 3;)
+        {
+            if ((numberonscreen[y][x] != numberonscreen[y][x + 1]) && (numberonscreen[y][x] != 0) && (numberonscreen[y][x + 1] != 0))
+            {
+                count++;
+            }
+            x += 2;
+        }
+    }
+    for (y = 0; y < 3;)
+    {
+        for (x = 0; x <= 3; x++)
+        {
+            if ((numberonscreen[y][x] != numberonscreen[y + 1][x]) && (numberonscreen[y][x] != 0) && (numberonscreen[y + 1][x] != 0))
+            {
+                count++;
+            }
+        }
+        y += 2;
+    }
+    if (count == 16)
+    {
+        return 1; //แพ้
+    }
+    else
+    {
+        return 0; //ไม่แพ้
+    }
 }
 void gotoxy(SHORT x, SHORT y)
 {
