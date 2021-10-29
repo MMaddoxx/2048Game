@@ -2,6 +2,7 @@
 #include <Windows.h>
 #include <time.h>
 #include <conio.h>
+#include <math.h>
 #define screen_x 55
 #define screen_y 28
 #define screen_x_ingame 100
@@ -16,37 +17,38 @@
 #define bell 2
 #define dollar 3
 ///////////////////PROTORYPE FUNCTION ////////////////////////////////
-int setConsole();                //ตั้งกรอบหน้าจอ
-int setConsoleingame();          //ตั้งกรอบให้ใหญ่ขึ้น
-int islose();                    //ตรวจสอบการแก้
-int check(char moving);          //เอาไว้ตรวจสอบว่าขยับได้อยู่ไหม
-void menu();                     //สร้างหน้าเมนู
-void initnumber();               //สุ่มตำแหน่งบล็อกเลขเริ่มต้น 2 ตัว
-void drawframe();                //วาดเฟรม
-void movenum_up();               //ขยับบล็อกขึ้น
-void movenum_down();             //ขยับบล็อกลง
-void movenum_left();             //ขยับบล็อกซ้าย
-void movenum_right();            //ขยับบล็อกขวา
-void newnumaftermove();          //สุ่มตัวเลขใหม่หลังจากขยับเสร็จ
-void fill_number_to_screen();    //นำตัวเลขหลังการขยับเอาเอามาขึ้นจอ
-void show_score();               //แสดงคะแนนที่ผู้เล่นทำได้
-void arange_score();             //เรียงคะแนน
-void setcursor(bool visible);    //เปิดปิดcursor
-void readfile();                 //อ้่านไฟล์ScoreBoard
-void writefile();                //เขียนคะแนน
-void enteryourname();            //เอาไวั้รับชื่อผู้เล่น
-void displayitem(int item);      //เอาitemขึ้นจอ
-void randomitem();               //สุ่ม item
-void choseblock(int x);          //เลือกบล็อคที่จะทำลาย
-void highlightnum(int x, int y); //สร้างกรอบตอนเลือก
-void clearitem();                //ล้างหน้า item
+int setConsole();                      //ตั้งกรอบหน้าจอ
+int setConsoleingame();                //ตั้งกรอบให้ใหญ่ขึ้น
+int islose();                          //ตรวจสอบการแก้
+int check(char moving);                //เอาไว้ตรวจสอบว่าขยับได้อยู่ไหม
+void menu();                           //สร้างหน้าเมนู
+void initnumber();                     //สุ่มตำแหน่งบล็อกเลขเริ่มต้น 2 ตัว
+void drawframe();                      //วาดเฟรม
+void movenum_up();                     //ขยับบล็อกขึ้น
+void movenum_down();                   //ขยับบล็อกลง
+void movenum_left();                   //ขยับบล็อกซ้าย
+void movenum_right();                  //ขยับบล็อกขวา
+void newnumaftermove();                //สุ่มตัวเลขใหม่หลังจากขยับเสร็จ
+void fill_number_to_screen();          //นำตัวเลขหลังการขยับเอาเอามาขึ้นจอ
+void show_score();                     //แสดงคะแนนที่ผู้เล่นทำได้
+void arange_score();                   //เรียงคะแนน
+void setcursor(bool visible);          //เปิดปิดcursor
+void readfile();                       //อ้่านไฟล์ScoreBoard
+void writefile();                      //เขียนคะแนน
+void enteryourname();                  //เอาไวั้รับชื่อผู้เล่น
+void displayitem(int item);            //เอาitemขึ้นจอ
+void randomitem();                     //สุ่ม item
+int choseblock(int chosing, int item); //เลือกบล็อคที่จะทำลาย
+void highlightnum(int x, int y);       //สร้างกรอบตอนเลือก
+void clearitem();                      //ล้างหน้า item
 void scoreboard();
 void gotoxy(SHORT x, SHORT y);
 void setcolor(int fg, int bg);
 //////////////////////GLOBAL VARIABLE/////////////////////////////////
 unsigned int score = 0;
-unsigned int fakescore = 1000;
+unsigned int fakescore = 500;
 unsigned int readcount = 0;
+unsigned int doublescore = 0;
 int numberposition_x[4] = {9, 21, 33, 45};
 int numberposition_y[4] = {9, 14, 19, 24};
 int numberonscreen[4][4] = {{0, 0, 0, 0},
@@ -193,7 +195,7 @@ int main()
                     score = 0;
                     show_score();
                 }
-                else if (ch == 'i')
+                else if (ch == 'i' && fakescore >= 500)
                 {
                     randomitem();
                 }
@@ -334,13 +336,15 @@ void drawframe()
     printf("   |                  |\n");
     printf("   |                  |\n");
     printf("   |__________________|\n");
-    setcolor(5, 0);
+    setcolor(1, 0);
     gotoxy(29, 2);
     printf("Use %c %c <- -> to navigate", 24, 25);
     gotoxy(29, 3);
     printf("Press R to restart");
     gotoxy(29, 4);
     printf("Press ESC to quit");
+    gotoxy(29, 5);
+    printf("Press I to random an item");
     setcolor(7, 0);
     gotoxy(69, 4);
     printf("Spacial item");
@@ -491,8 +495,17 @@ void movenum_up()
                 { //ถ้าหากว่าเป็นตัวที่เหมือนกันและไม่ติดflag(ไม่เคยบวกมาก่อน)
                     numberonscreen[y - 1][x] *= 2;
                     numberonscreen[y][x] = 0;
-                    score = score + numberonscreen[y - 1][x];
-                    fakescore = fakescore + numberonscreen[y - 1][x];
+                    if (doublescore > 0)
+                    {
+                        score = score + (numberonscreen[y - 1][x] * 2);
+                        fakescore = fakescore + (numberonscreen[y - 1][x] * 2);
+                        doublescore--;
+                    }
+                    else
+                    {
+                        score = score + numberonscreen[y - 1][x];
+                        fakescore = fakescore + numberonscreen[y - 1][x];
+                    }
                     newnum = true;
                     flag[y - 1][x] = 1;
                     Sleep(75);
@@ -551,8 +564,16 @@ void movenum_down()
                 { //ถ้าหากว่าเป็นตัวที่เหมือนกันและไม่ติดflag(ไม่เคยบวกมาก่อน)
                     numberonscreen[y + 1][x] *= 2;
                     numberonscreen[y][x] = 0;
-                    score = score + numberonscreen[y + 1][x];
-                    fakescore = fakescore + numberonscreen[y + 1][x];
+                    if (doublescore > 0)
+                    {
+                        score = score + (numberonscreen[y + 1][x] * 2);
+                        fakescore = fakescore + (numberonscreen[y + 1][x] * 2);
+                    }
+                    else
+                    {
+                        score = score + numberonscreen[y + 1][x];
+                        fakescore = fakescore + numberonscreen[y + 1][x];
+                    }
                     Sleep(75);
                     newnum = true;
                     flag[y + 1][x] = 1;
@@ -614,8 +635,16 @@ void movenum_left()
                     numberonscreen[y][x] = 0;
                     newnum = true;
                     flag[y][x - 1] = 1;
-                    score = score + numberonscreen[y][x - 1];
-                    fakescore = fakescore + numberonscreen[y][x - 1];
+                    if (doublescore > 0)
+                    {
+                        score = score + (numberonscreen[y][x - 1] * 2);
+                        fakescore = fakescore + (numberonscreen[y][x - 1] * 2);
+                    }
+                    else
+                    {
+                        score = score + numberonscreen[y][x - 1];
+                        fakescore = fakescore + numberonscreen[y][x - 1];
+                    }
                     Sleep(75);
                     if (numberonscreen[y][x - 1] == 2048)
                     {
@@ -675,8 +704,16 @@ void movenum_right()
                     numberonscreen[y][x] = 0;
                     newnum = true;
                     flag[y][x + 1] = 1;
-                    score = score + numberonscreen[y][x + 1];
-                    fakescore = fakescore + numberonscreen[y][x + 1];
+                    if (doublescore > 0)
+                    {
+                        score = score + (numberonscreen[y][x + 1] * 2);
+                        fakescore = fakescore + (numberonscreen[y][x + 1] * 2);
+                    }
+                    else
+                    {
+                        score = score + numberonscreen[y][x + 1];
+                        fakescore = fakescore + numberonscreen[y][x + 1];
+                    }
                     Sleep(75);
                     if (numberonscreen[y][x + 1] == 2048) //ถ้าวกแล้วได้2048
                     {
@@ -730,6 +767,9 @@ void show_score()
     gotoxy(4, 3);
     setcolor(0, 7);
     printf("Score : %d", score);
+    setcolor(7, 0);
+    gotoxy(4, 5);
+    printf("You can draw %d item(s)", fakescore / 500);
 }
 int check(char moving)
 {
@@ -942,7 +982,7 @@ void randomitem()
         }
         Beep(2000, 200);
     }
-    item = seven;
+    item = dollar;
     displayitem(item);
     switch (item)
     {
@@ -953,28 +993,84 @@ void randomitem()
         printf("You Got 1000 Points");
         score += 1000;
         show_score();
-        Sleep(5000);
+        Sleep(2000);
         clearitem();
         break;
     }
     case seven:
     {
+        show_score();
         gotoxy(59, 22);
         setcolor(7, 0);
         printf("You can remove 1 block from board");
-        choseblock(1);
+        choseblock(1, 0);
         clearitem();
         break;
-    } 
+    }
+    case bell:
+    {
+        show_score();
+        gotoxy(59, 22);
+        setcolor(7, 0);
+        printf("You can change 1 number(No 1024,2048)");
+        choseblock(1, 1);
+        clearitem();
+        break;
+    }
+    case dollar:
+    {
+        show_score();
+        gotoxy(59, 22);
+        setcolor(7, 0);
+        printf("You have 2x points 10 times");
+        doublescore = 11;
+        show_score();
+        Sleep(2500);
+        clearitem();
+        break;
+    }
     }
 }
-void choseblock(int chosing)
+int choseblock(int chosing, int item)
 {
     char ch;
-    int x = 0, y = 0;
+    int x = 0, y = 0, count = 0;
     highlightnum(x, y);
     while (chosing > 0)
     {
+        if (item == 0)
+        {
+            for (int a = 0; a <= 3; a++)
+            {
+                for (int b = 0; b <= 3; b++)
+                {
+                    if (numberonscreen[b][a] == 0)
+                    {
+                        count++;
+                    }
+                }
+            }
+            if (count == 15)
+            {
+                gotoxy(54, 23);
+                setcolor(3, 0);
+                printf("Looks like you can't remove any more block");
+                gotoxy(54, 24);
+                printf("You got 1000 score instate");
+                score += 1000;
+                show_score();
+                Sleep(3000);
+                setcolor(0, 0);
+                gotoxy(54, 23);
+                printf("                                          ");
+                gotoxy(54, 24);
+                printf("                           ");
+                clearitem();
+                fill_number_to_screen();
+
+                return 0;
+            }
+        }
         if (kbhit())
         {
             ch = getch();
@@ -997,8 +1093,34 @@ void choseblock(int chosing)
             else if (ch == ' ' && numberonscreen[y][x] != 0)
             {
                 chosing--;
-                numberonscreen[y][x] = 0;
-                fill_number_to_screen();
+                if (item == 0)
+                {
+                    numberonscreen[y][x] = 0;
+                    fill_number_to_screen();
+                }
+                else if (item == 1)
+                {
+                    bool loop = true;
+                    do
+                    {
+                        setcolor(7, 0);
+                        gotoxy(numberposition_x[x] - 2, numberposition_y[y]);
+                        printf("     ");
+                        gotoxy(numberposition_x[x] - 2, numberposition_y[y]);
+                        setcursor(1);
+                        scanf("%d", &numberonscreen[y][x]);
+                        for (int i = 1; i <= 9; i++)
+                        {
+                            if (numberonscreen[y][x] == pow(2, i))
+                            {
+                                loop = false;
+                                break;
+                            }
+                        }
+                    } while (loop);
+                    setcursor(0);
+                    fill_number_to_screen();
+                }
                 break;
             }
             fflush(stdin);
@@ -1181,7 +1303,7 @@ void clearitem()
         printf("                            ");
     }
     gotoxy(58, 22);
-    printf("                                  ");
+    printf("                                      ");
 }
 void gotoxy(SHORT x, SHORT y)
 {
