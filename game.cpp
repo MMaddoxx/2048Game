@@ -1,8 +1,10 @@
+#define _WIN32_WINNT 0x0601
 #include <stdio.h>
-#include <Windows.h>
+#include <windows.h>
 #include <time.h>
 #include <conio.h>
 #include <math.h>
+#include <string.h>
 #define screen_x 55
 #define screen_y 28
 #define screen_x_ingame 100
@@ -41,12 +43,13 @@ void randomitem();                     //สุ่ม item
 int choseblock(int chosing, int item); //เลือกบล็อคที่จะทำลาย
 void highlightnum(int x, int y);       //สร้างกรอบตอนเลือก
 void clearitem();                      //ล้างหน้า item
+void setfont();                        // font
 void scoreboard();
 void gotoxy(SHORT x, SHORT y);
 void setcolor(int fg, int bg);
 //////////////////////GLOBAL VARIABLE/////////////////////////////////
 unsigned int score = 0;
-unsigned int fakescore = 500;
+unsigned int fakescore = 0;
 unsigned int readcount = 0;
 unsigned int doublescore = 0;
 int numberposition_x[4] = {9, 21, 33, 45};
@@ -63,11 +66,29 @@ bool playing = false;
 bool in_menu = true;
 bool in_scoreboard = false;
 bool runing = true;
+bool gameover = false;
 struct score
 {
     char playername[20];
     unsigned int playerscore;
 } player[6];
+typedef struct _CONSOLE_FONT_INFOEX
+{
+    ULONG cbSize;
+    DWORD nFont;
+    COORD dwFontSize;
+    UINT FontFamily;
+    UINT FontWeight;
+    WCHAR FaceName[LF_FACESIZE];
+} CONSOLE_FONT_INFOEX, *PCONSOLE_FONT_INFOEX;
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+    BOOL WINAPI SetCurrentConsoleFontEx(HANDLE hConsoleOutput, BOOL bMaximumWindow, PCONSOLE_FONT_INFOEX lpConsoleCurrentFontEx);
+#ifdef __cplusplus
+}
+#endif
 FILE *fp;
 HANDLE wHnd;
 HANDLE rHnd;
@@ -80,12 +101,15 @@ DWORD numEventsRead = 0;
 int main()
 {
     char ch;
+    HWND consoleWindow = GetConsoleWindow();
     setcursor(false);
     setConsole();
     readfile();
+    setfont();
     while (runing)
     {
         setConsole();
+        SetWindowPos(consoleWindow, 0, 540, 180, 0, 0, SWP_NOSIZE | SWP_NOZORDER);
         while (in_menu)
         {
             menu();
@@ -122,33 +146,35 @@ int main()
                     in_menu = false;
                     runing = false;
                 }
-                fflush(stdin);
             }
+            fflush(stdin);
+            Sleep(100);
         }
         system("cls");
+        setConsoleingame();
         drawframe();
         initnumber();
         fill_number_to_screen();
         show_score();
-        setConsoleingame();
+        SetWindowPos(consoleWindow, 0, 400, 150, 0, 0, SWP_NOSIZE | SWP_NOZORDER);
         while (playing)
         {
-            if (kbhit()) //ถ้ามาการกดคตีย์บอร์ดระหว่างเล่น
+            if (kbhit())
             {
                 ch = getch();
-                if (ch == keyup)
+                if (ch == keyup && gameover == false)
                 {
                     movenum_up();
                 }
-                else if (ch == keydown)
+                else if (ch == keydown && gameover == false)
                 {
                     movenum_down();
                 }
-                else if (ch == keyleft)
+                else if (ch == keyleft && gameover == false)
                 {
                     movenum_left();
                 }
-                else if (ch == keyright)
+                else if (ch == keyright && gameover == false)
                 {
                     movenum_right();
                 }
@@ -156,8 +182,10 @@ int main()
                 {
                     setcolor(7, 0);
                     system("cls");
+                    fakescore = 0;
                     playing = false;
                     in_menu = true;
+                    gameover = false;
                     for (int y = 0; y < 4; y++)
                     {
                         for (int x = 0; x < 4; x++)
@@ -193,12 +221,15 @@ int main()
                     initnumber();
                     fill_number_to_screen();
                     score = 0;
+                    fakescore = 0;
                     show_score();
+                    gameover = false;
                 }
-                else if (ch == 'i' && fakescore >= 500)
+                else if (ch == 'i' && fakescore >= 500 && gameover == false)
                 {
                     randomitem();
                 }
+                fflush(stdin);
                 if (islose() == 1)
                 {
                     Sleep(2000);
@@ -225,7 +256,7 @@ int main()
                     }
                 }
             }
-            fflush(stdin);
+            Sleep(100);
         }
     }
     return 0;
@@ -337,14 +368,16 @@ void drawframe()
     printf("   |                  |\n");
     printf("   |__________________|\n");
     setcolor(1, 0);
-    gotoxy(29, 2);
+    gotoxy(29, 1);
     printf("Use %c %c <- -> to navigate", 24, 25);
-    gotoxy(29, 3);
+    gotoxy(29, 2);
     printf("Press R to restart");
-    gotoxy(29, 4);
+    gotoxy(29, 3);
     printf("Press ESC to quit");
+    gotoxy(29, 4);
+    printf("Press I to random an item ");
     gotoxy(29, 5);
-    printf("Press I to random an item");
+    printf("Press SpaceBar to use item");
     setcolor(7, 0);
     gotoxy(69, 4);
     printf("Spacial item");
@@ -368,7 +401,6 @@ void initnumber()
     int i, x, y;
     for (i = 0; i < 2; i++)
     {
-
         x = rand() % 4;
         y = rand() % 4;
         while (numberonscreen[y][x] != 0) //ถ้าได้ตำแหน่งที่ไม่ใช่ 0 ให้สุ่มใหม่จนกว่าจะได้
@@ -432,7 +464,7 @@ void fill_number_to_screen()
             }
             else if (numberonscreen[y][x] == 2048)
             {
-                setcolor(0, 15);
+                setcolor(0, 10);
             }
             if (numberonscreen[y][x] < 10)
             {
@@ -513,7 +545,31 @@ void movenum_up()
                     {
                         score = score + numberonscreen[y - 1][x];
                         fill_number_to_screen();
-                        playing = false;
+                        show_score();
+                        gameover = true;
+                        Sleep(2000);
+                        for (int y = 0; y < 4; y++)
+                        {
+                            for (int x = 0; x < 4; x++)
+                            {
+                                numberonscreen[y][x] = 0;
+                            }
+                        }
+                        fill_number_to_screen();
+                        setcolor(7, 4);
+                        for (int i = 13; i <= 15; i++)
+                        {
+                            gotoxy(16, i);
+                            printf("                       ");
+                        }
+                        gotoxy(16, 16);
+                        printf("        YOU WIN        ");
+                        for (int i = 17; i <= 19; i++)
+                        {
+                            gotoxy(16, i);
+                            printf("                       ");
+                        }
+                        return;
                     }
                 }
             }
@@ -581,7 +637,31 @@ void movenum_down()
                     {
                         score = score + numberonscreen[y - 1][x];
                         fill_number_to_screen();
-                        playing = false;
+                        gameover = true;
+                        show_score();
+                        Sleep(2000);
+                        for (int y = 0; y < 4; y++)
+                        {
+                            for (int x = 0; x < 4; x++)
+                            {
+                                numberonscreen[y][x] = 0;
+                            }
+                        }
+                        fill_number_to_screen();
+                        setcolor(7, 4);
+                        for (int i = 13; i <= 15; i++)
+                        {
+                            gotoxy(16, i);
+                            printf("                       ");
+                        }
+                        gotoxy(16, 16);
+                        printf("        YOU WIN        ");
+                        for (int i = 17; i <= 19; i++)
+                        {
+                            gotoxy(16, i);
+                            printf("                       ");
+                        }
+                        return;
                     }
                 }
             }
@@ -650,7 +730,31 @@ void movenum_left()
                     {
                         score = score + numberonscreen[y][x - 1]; //ถ้าวกแล้วได้2048
                         fill_number_to_screen();
-                        playing = false;
+                        gameover = true;
+                        show_score();
+                        Sleep(2000);
+                        for (int y = 0; y < 4; y++)
+                        {
+                            for (int x = 0; x < 4; x++)
+                            {
+                                numberonscreen[y][x] = 0;
+                            }
+                        }
+                        fill_number_to_screen();
+                        setcolor(7, 4);
+                        for (int i = 13; i <= 15; i++)
+                        {
+                            gotoxy(16, i);
+                            printf("                       ");
+                        }
+                        gotoxy(16, 16);
+                        printf("        YOU WIN        ");
+                        for (int i = 17; i <= 19; i++)
+                        {
+                            gotoxy(16, i);
+                            printf("                       ");
+                        }
+                        return;
                     }
                 }
             }
@@ -719,7 +823,31 @@ void movenum_right()
                     {
                         score = score + numberonscreen[y][x + 1];
                         fill_number_to_screen();
-                        playing = false;
+                        gameover = true;
+                        show_score();
+                        Sleep(2000);
+                        for (int y = 0; y < 4; y++)
+                        {
+                            for (int x = 0; x < 4; x++)
+                            {
+                                numberonscreen[y][x] = 0;
+                            }
+                        }
+                        fill_number_to_screen();
+                        setcolor(7, 4);
+                        for (int i = 13; i <= 15; i++)
+                        {
+                            gotoxy(16, i);
+                            printf("                       ");
+                        }
+                        gotoxy(16, 16);
+                        printf("        YOU WIN        ");
+                        for (int i = 17; i <= 19; i++)
+                        {
+                            gotoxy(16, i);
+                            printf("                       ");
+                        }
+                        return;
                     }
                 }
             }
@@ -911,8 +1039,7 @@ void scoreboard()
 }
 void enteryourname()
 {
-    srand(time(NULL));
-    setcolor(rand() % 9 + 1, 0);
+    setcolor(7, 0);
     gotoxy(18, 5);
     printf("__________________");
     gotoxy(17, 6);
@@ -922,11 +1049,9 @@ void enteryourname()
     gotoxy(17, 8);
     printf("|__________________|");
     gotoxy(17, 10);
-    setcolor(rand() % 9 + 1, 0);
     printf("-->");
     setcursor(1);
-    setcolor(rand() % 9 + 1, 0);
-    scanf("%s", player[readcount].playername);
+    scanf("%[^\n]s", player[readcount].playername);
     setcursor(0);
 }
 int islose()
@@ -982,8 +1107,6 @@ void randomitem()
         }
         Beep(2000, 200);
     }
-    item = dollar;
-    displayitem(item);
     switch (item)
     {
     case cherry:
@@ -1003,6 +1126,8 @@ void randomitem()
         gotoxy(59, 22);
         setcolor(7, 0);
         printf("You can remove 1 block from board");
+        gotoxy(59, 23);
+        printf("Press Space bar to select");
         choseblock(1, 0);
         clearitem();
         break;
@@ -1013,6 +1138,8 @@ void randomitem()
         gotoxy(59, 22);
         setcolor(7, 0);
         printf("You can change 1 number(No 1024,2048)");
+        gotoxy(59, 23);
+        printf("Press Space bar to select");
         choseblock(1, 1);
         clearitem();
         break;
@@ -1023,7 +1150,7 @@ void randomitem()
         gotoxy(59, 22);
         setcolor(7, 0);
         printf("You have 2x points 10 times");
-        doublescore = 11;
+        doublescore += 11;
         show_score();
         Sleep(2500);
         clearitem();
@@ -1304,6 +1431,8 @@ void clearitem()
     }
     gotoxy(58, 22);
     printf("                                      ");
+    gotoxy(58, 23);
+    printf("                                      ");
 }
 void gotoxy(SHORT x, SHORT y)
 {
@@ -1314,4 +1443,15 @@ void setcolor(int fg, int bg)
 {
     HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
     SetConsoleTextAttribute(hConsole, bg * 16 + fg);
+}
+void setfont()
+{
+    int newWidth = 8, newHeight = 18;
+    CONSOLE_FONT_INFOEX fontStructure = {0};
+    fontStructure.cbSize = sizeof(fontStructure);
+    fontStructure.dwFontSize.X = newWidth;
+    fontStructure.dwFontSize.Y = newHeight;
+    wcscpy(fontStructure.FaceName, L"PSL Kittithada Pro");
+    HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+    SetCurrentConsoleFontEx(hConsole, true, &fontStructure);
 }
