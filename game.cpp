@@ -138,7 +138,7 @@ int main()
                                 in_scoreboard = false;
                             }
                         }
-                        Sleep(400);
+                        Sleep(100);
                     }
                     system("cls");
                 }
@@ -381,7 +381,7 @@ void drawframe()
     printf("Press SpaceBar to use item");
     setcolor(7, 0);
     gotoxy(69, 4);
-    printf("Spacial item");
+    printf("Special item");
     gotoxy(61, 6);
     printf("____________________________");
     for (int i = 7; i <= 18; i++)
@@ -1108,7 +1108,6 @@ void randomitem()
         }
         Beep(2000, 200);
     }
-    item = seven;
     switch (item)
     {
     case cherry:
@@ -1456,7 +1455,7 @@ void setfont()
     fontStructure.cbSize = sizeof(fontStructure);
     fontStructure.dwFontSize.X = newWidth;
     fontStructure.dwFontSize.Y = newHeight;
-    wcscpy(fontStructure.FaceName, L"PSL Kittithada Pro");
+    wcscpy(fontStructure.FaceName, L"Courier New");
     HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
     SetCurrentConsoleFontEx(hConsole, true, &fontStructure);
 }
