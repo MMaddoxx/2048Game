@@ -233,6 +233,7 @@ int main()
                 fflush(stdin);
                 if (islose() == 1)
                 {
+                    gameover = true;
                     Sleep(2000);
                     for (int y = 0; y < 4; y++)
                     {
@@ -370,7 +371,7 @@ void drawframe()
     printf("   |__________________|\n");
     setcolor(1, 0);
     gotoxy(29, 1);
-    printf("Use %c %c <- -> to navigate", 24, 25);
+    printf("Use Arrow keys to navigate");
     gotoxy(29, 2);
     printf("Press R to restart");
     gotoxy(29, 3);
@@ -1060,16 +1061,19 @@ int islose()
     int x = 0, y = 0, count = 0;
     for (y = 0; y <= 3; y++)
     {
-        for (x = 0; x < 3;)
+        for (x = 0; x < 3; x++)
         {
             if ((numberonscreen[y][x] != numberonscreen[y][x + 1]) && (numberonscreen[y][x] != 0) && (numberonscreen[y][x + 1] != 0))
             {
                 count++;
             }
-            x += 2;
+            else
+            {
+                return 0;
+            }
         }
     }
-    for (y = 0; y < 3;)
+    for (y = 0; y < 3; y++)
     {
         for (x = 0; x <= 3; x++)
         {
@@ -1077,16 +1081,15 @@ int islose()
             {
                 count++;
             }
+            else
+            {
+                return 0;
+            }
         }
-        y += 2;
     }
-    if (count == 16)
+    if (count == 24)
     {
         return 1; //แพ้
-    }
-    else
-    {
-        return 0; //ไม่แพ้
     }
 }
 void randomitem()
