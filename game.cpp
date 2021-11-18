@@ -48,6 +48,7 @@ void scoreboard();
 void gotoxy(SHORT x, SHORT y);
 void setcolor(int fg, int bg);
 //////////////////////GLOBAL VARIABLE/////////////////////////////////
+char saveplayername[20];
 unsigned int score = 0;
 unsigned int fakescore = 0;
 unsigned int readcount = 0;
@@ -199,6 +200,7 @@ int main()
                         player[readcount].playerscore = score;
                         writefile();
                         score = 0;
+                        readfile();
                     }
                 }
                 else if (ch == 'r')
@@ -215,6 +217,8 @@ int main()
                         player[readcount].playerscore = score;
                         writefile();
                         score = 0;
+                        readfile();
+                        strcpy(player[readcount].playername,saveplayername);
                     }
                     setcolor(7, 0);
                     system("cls");
@@ -965,8 +969,8 @@ void readfile()
     {
         fscanf(fp, "%d %s", &player[readcount].playerscore, player[readcount].playername);
         readcount++;
-        printf("%s\n", player[readcount].playername);
     } while (player[readcount - 1].playername[0] != 'x' && readcount <= 4);
+    
 }
 void writefile()
 {
@@ -999,6 +1003,7 @@ void writefile()
             fprintf(fp, "0 x\n");
         }
     }
+    readcount = 0;
     fclose(fp);
 }
 void scoreboard()
@@ -1041,6 +1046,7 @@ void scoreboard()
 }
 void enteryourname()
 {
+    
     setcolor(7, 0);
     gotoxy(18, 5);
     printf("__________________");
@@ -1055,6 +1061,7 @@ void enteryourname()
     setcursor(1);
     scanf("%[^\n]s", player[readcount].playername);
     setcursor(0);
+    strcpy(saveplayername,player[readcount].playername);
 }
 int islose()
 {
