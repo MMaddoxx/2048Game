@@ -95,9 +95,6 @@ HANDLE wHnd;
 HANDLE rHnd;
 SMALL_RECT windowSize = {0, 0, screen_x - 1, screen_y - 1};
 SMALL_RECT windowSizeingame = {0, 0, screen_x_ingame - 1, screen_y_ingame - 1};
-DWORD fdwMode;
-DWORD numEvents = 0;
-DWORD numEventsRead = 0;
 //////////////////////////////MAIN////////////////////////////////////
 int main()
 {
@@ -967,7 +964,7 @@ void readfile()
     fp = fopen("2048_ScoreBoard.txt", "r");
     do
     {
-        fscanf(fp, "%d %s", &player[readcount].playerscore, player[readcount].playername);
+        fscanf(fp, "%d %[^\n]s", &player[readcount].playerscore, player[readcount].playername);
         readcount++;
     } while (player[readcount - 1].playername[0] != 'x' && readcount <= 4);
     
