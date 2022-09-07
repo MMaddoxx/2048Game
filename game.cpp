@@ -108,47 +108,39 @@ int main()
     {
         setConsole();
         SetWindowPos(consoleWindow, 0, 540, 180, 0, 0, SWP_NOSIZE | SWP_NOZORDER);
-        while (in_menu)
+        menu();
+        ch = getch();
+        if (ch == '1')
         {
-            menu();
-            if (kbhit())
-            {
-                ch = getch();
-                if (ch == '1')
-                {
-                    system("cls");
-                    enteryourname();
-                    in_menu = false;
-                    playing = true;
-                }
-                else if (ch == '2')
-                {
-                    system("cls");
-                    in_scoreboard = true;
-                    while (in_scoreboard)
-                    {
-                        scoreboard();
-                        if (kbhit())
-                        {
-                            ch = getch();
-                            if (ch == esc)
-                            {
-                                in_scoreboard = false;
-                            }
-                        }
-                        Sleep(100);
-                    }
-                    system("cls");
-                }
-                else if (ch == esc)
-                {
-                    in_menu = false;
-                    runing = false;
-                }
-            }
-            fflush(stdin);
-            Sleep(400);
+            system("cls");
+            enteryourname();
+            in_menu = false;
+            playing = true;
         }
+        else if (ch == '2')
+        {
+            system("cls");
+            in_scoreboard = true;
+            while (in_scoreboard)
+            {
+                scoreboard();
+                if (kbhit())
+                {
+                    ch = getch();
+                    if (ch == esc)
+                    {
+                        in_scoreboard = false;
+                    }
+                }
+                Sleep(100);
+            }
+            system("cls");
+        }
+        else if (ch == esc)
+        {
+            exit(0);
+        }
+
         system("cls");
         setConsoleingame();
         drawframe();
@@ -215,7 +207,7 @@ int main()
                         writefile();
                         score = 0;
                         readfile();
-                        strcpy(player[readcount].playername,saveplayername);
+                        strcpy(player[readcount].playername, saveplayername);
                     }
                     setcolor(7, 0);
                     system("cls");
@@ -421,53 +413,44 @@ void fill_number_to_screen()
     {
         for (x = 0; x < 4; x++)
         {
-            if (numberonscreen[y][x] == 0) //เซทสี
+            switch (numberonscreen[y][x])
             {
+            case 0:
                 setcolor(0, 0);
-            }
-            else if (numberonscreen[y][x] == 2)
-            {
+                break;
+            case 2:
                 setcolor(0, 6);
-            }
-            else if (numberonscreen[y][x] == 4)
-            {
+                break;
+            case 4:
                 setcolor(7, 1);
-            }
-            else if (numberonscreen[y][x] == 8)
-            {
+                break;
+            case 8:
                 setcolor(7, 2);
-            }
-            else if (numberonscreen[y][x] == 16)
-            {
+                break;
+            case 16:
                 setcolor(7, 5);
-            }
-            else if (numberonscreen[y][x] == 32)
-            {
+                break;
+            case 32:
                 setcolor(7, 12);
-            }
-            else if (numberonscreen[y][x] == 64)
-            {
+                break;
+            case 64:
                 setcolor(7, 13);
-            }
-            else if (numberonscreen[y][x] == 128)
-            {
+                break;
+            case 128:
                 setcolor(7, 3);
-            }
-            else if (numberonscreen[y][x] == 256)
-            {
+                break;
+            case 256:
                 setcolor(0, 11);
-            }
-            else if (numberonscreen[y][x] == 512)
-            {
+                break;
+            case 512:
                 setcolor(7, 4);
-            }
-            else if (numberonscreen[y][x] == 1024)
-            {
+                break;
+            case 1024:
                 setcolor(0, 7);
-            }
-            else if (numberonscreen[y][x] == 2048)
-            {
+                break;
+            case 2048:
                 setcolor(0, 10);
+                break;
             }
             if (numberonscreen[y][x] < 10)
             {
@@ -905,7 +888,9 @@ void show_score()
 int check(char moving)
 {
     int x, y;
-    if (moving == 'u')
+    switch (moving)
+    {
+    case 'u':
     {
         for (y = 1; y < 4; y++)
         {
@@ -917,8 +902,9 @@ int check(char moving)
                 }
             }
         }
+        break;
     }
-    else if (moving == 'd')
+    case 'd':
     {
         for (y = 2; y >= 0; y--)
         {
@@ -930,8 +916,9 @@ int check(char moving)
                 }
             }
         }
+        break;
     }
-    else if (moving == 'l')
+    case 'l':
     {
         for (x = 1; x < 4; x++)
         {
@@ -943,8 +930,9 @@ int check(char moving)
                 }
             }
         }
+        break;
     }
-    else if (moving == 'r')
+    case 'r':
     {
         for (x = 2; x >= 0; x--)
         {
@@ -956,6 +944,8 @@ int check(char moving)
                 }
             }
         }
+        break;
+    }
     }
     return 1;
 }
@@ -967,7 +957,6 @@ void readfile()
         fscanf(fp, "%d %[^\n]s", &player[readcount].playerscore, player[readcount].playername);
         readcount++;
     } while (player[readcount - 1].playername[0] != 'x' && readcount <= 4);
-    
 }
 void writefile()
 {
@@ -1043,7 +1032,6 @@ void scoreboard()
 }
 void enteryourname()
 {
-    
     setcolor(7, 0);
     gotoxy(18, 5);
     printf("__________________");
@@ -1058,7 +1046,7 @@ void enteryourname()
     setcursor(1);
     scanf("%[^\n]s", player[readcount].playername);
     setcursor(0);
-    strcpy(saveplayername,player[readcount].playername);
+    strcpy(saveplayername, player[readcount].playername);
 }
 int islose()
 {
